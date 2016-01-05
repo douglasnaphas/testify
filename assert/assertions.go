@@ -26,6 +26,23 @@ type TestingT interface {
 // Comparison a custom function that returns true on success and false on failure
 type Comparison func() (success bool)
 
+type callerInfoStruct struct {
+	runtime interface {
+		Caller(skip int) (pc uintptr, file string, line int, ok bool)
+		FuncForPC(pc uintptr) *runtime.Func
+	}
+}
+
+type realRuntime struct{}
+
+func (realRuntime) Caller(skip int) (pc uintptr, file string, line int, ok bool) {
+	return runtime.Caller(skip)
+}
+
+func (realRuntime) FuncForPC(pc uintptr) *runtime.Func {
+	return runtime.FuncForPC(pc)
+}
+
 /*
 	Helper functions
 */
@@ -71,6 +88,11 @@ the problem actually occured in calling code.*/
 // of each stack frame leading from the current test to the assert call that
 // failed.
 func CallerInfo() []string {
+	c := callerInfoStruct{runtime: realRuntime{}}
+	return c.callerInfo()
+}
+
+func (c callerInfoStruct) callerInfo() []string {
 
 	pc := uintptr(0)
 	file := ""
@@ -80,7 +102,7 @@ func CallerInfo() []string {
 
 	callers := []string{}
 	for i := 0; ; i++ {
-		pc, file, line, ok = runtime.Caller(i)
+		pc, file, line, ok = c.runtime.Caller(i)
 		if !ok {
 			return nil
 		}
@@ -97,7 +119,7 @@ func CallerInfo() []string {
 			callers = append(callers, fmt.Sprintf("%s:%d", file, line))
 		}
 
-		f := runtime.FuncForPC(pc)
+		f := c.runtime.FuncForPC(pc)
 		if f == nil {
 			break
 		}
