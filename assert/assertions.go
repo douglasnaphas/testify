@@ -31,6 +31,7 @@ type callerInfoStruct struct {
 		Caller(skip int) (pc uintptr, file string, line int, ok bool)
 		FuncForPC(pc uintptr) *runtime.Func
 	}
+	testing bool
 }
 
 type realRuntime struct{}
@@ -102,7 +103,11 @@ func (c callerInfoStruct) callerInfo() []string {
 
 	callers := []string{}
 	for i := 0; ; i++ {
-		pc, file, line, ok = c.runtime.Caller(i)
+		if c.testing {
+			pc, file, line, ok = c.runtime.Caller(i)
+		} else {
+			pc, file, line, ok = runtime.Caller(i)
+		}
 		if !ok {
 			return nil
 		}
@@ -124,6 +129,7 @@ func (c callerInfoStruct) callerInfo() []string {
 			break
 		}
 		name = f.Name()
+		// fmt.Println(name)
 		// Drop the package
 		segments := strings.Split(name, ".")
 		name = segments[len(segments)-1]
@@ -152,11 +158,28 @@ func isTest(name, prefix string) bool {
 	return !unicode.IsLower(rune)
 }
 
+type getWhiteSpaceSringStruct struct {
+	runtime interface {
+		Caller(skip int) (pc uintptr, file string, line int, ok bool)
+	}
+	testing bool
+}
+
 // getWhitespaceString returns a string that is long enough to overwrite the default
 // output from the go testing framework.
 func getWhitespaceString() string {
+	return getWhiteSpaceSringStruct{}.getWhitespaceString()
+}
 
-	_, file, line, ok := runtime.Caller(1)
+func (g getWhiteSpaceSringStruct) getWhitespaceString() string {
+	var file string
+	var line int
+	var ok bool
+	if g.testing {
+		_, file, line, ok = g.runtime.Caller(1)
+	} else {
+		_, file, line, ok = runtime.Caller(1)
+	}
 	if !ok {
 		return ""
 	}
@@ -174,10 +197,8 @@ func messageFromMsgAndArgs(msgAndArgs ...interface{}) string {
 	if len(msgAndArgs) == 1 {
 		return msgAndArgs[0].(string)
 	}
-	if len(msgAndArgs) > 1 {
-		return fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
-	}
-	return ""
+	// len(msgAndArgs) > 1
+	return fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
 }
 
 // Indents all lines of the message by appending a number of tabs to each line, in an output format compatible with Go's
