@@ -254,8 +254,8 @@ func TestEqualFormatting(t *testing.T) {
 		msgAndArgs []interface{}
 		want       string
 	}{
-		{equalWant: "want", equalGot: "got", want: "\tassertions.go:[0-9]+: \r                          \r\tError Trace:\tassertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+\n\t\t\r\tError:      \tNot equal: \n\t\t\r\t            \texpected: \"want\"\n\t\t\r\t            \treceived: \"got\"\n"},
-		{equalWant: "want", equalGot: "got", msgAndArgs: []interface{}{"hello, %v!", "world"}, want: "\tassertions.go:[0-9]+: \r                          \r\tError Trace:\tassertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+\n\t\t\r\tError:      \tNot equal: \n\t\t\r\t            \texpected: \"want\"\n\t\t\r\t            \treceived: \"got\"\n\t\t\r\tMessages:   \thello, world!\n"},
+		{equalWant: "want", equalGot: "got", want: "\t(assertions.go:[0-9]+: \r                          \r\tError Trace:\tassertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+)?\n\t\t\r\tError:      \tNot equal: \n\t\t\r\t            \texpected: \"want\"\n\t\t\r\t            \treceived: \"got\"\n"},
+		{equalWant: "want", equalGot: "got", msgAndArgs: []interface{}{"hello, %v!", "world"}, want: "\tassertions.go:[0-9]+: \r                          \r\tError Trace:\t(assertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+\n\t\t\r\t            \t\r\t\t\tassertions.go:[0-9]+)?\n\t\t\r\tError:      \tNot equal: \n\t\t\r\t            \texpected: \"want\"\n\t\t\r\t            \treceived: \"got\"\n\t\t\r\tMessages:   \thello, world!\n"},
 	} {
 		mockT := &bufferT{}
 		Equal(mockT, currCase.equalWant, currCase.equalGot, currCase.msgAndArgs...)
